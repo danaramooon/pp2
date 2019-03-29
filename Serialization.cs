@@ -1,81 +1,77 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.IO;
+using System.Xml.Serialization;
 
-namespace ThreadEx
+namespace Serialization
 {
-        class Program
+    public class Program
+    {
+        [Serializable]
+        public class Student
         {
-            static Star star;
-            static int cur = 0;
-            class Star
+            public string name;
+            public double gpa;
+
+            public Student()
             {
-                public List<Point> points;
-
-                public Star()
-                {
-                    points = new List<Point>();
-                }
-
-                public void AddPoint(Point p)
-                {
-                    points.Add(p);
-                }
-
-                public void Draw()
-                {
-                    foreach (Point p in points)
-                    {
-                        Console.SetCursorPosition(p.x, p.y);
-                        Console.Write("*");
-                    }
-                }
+                name = " ";
+                gpa = 0.0;
             }
-           static void Main(string[] args)
-           {
-                star = new Star();
-
-                for (int x = 11; x < 14; x++)
-                {
-                    for (int y = 10; y < 13; y++)
-                    {
-                        Point p = new Point(x, y);
-                        star.AddPoint(p);
-                    }
-                }
-
-
-            Thread thread = new Thread(move);
-            thread.Start();
-
-            while (true)
+            
+            public Student(string name, double gpa)
             {
-                if(cur == 0)
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                }
-                if(cur == 1)
-                {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                }
-                if(cur == 2)
-                {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                }
+                this.name = name;
+                this.gpa = gpa;
             }
-
-    
         }
-            static void move()
+        [Serializable]
+        public class Lesson
+        {
+            public List<Student> students;
+            public string name;
+            public Lesson()
             {
-                while (true)
-                {
-                    star.Draw();
-                    cur += 1;
-                    if (cur > 3)
-                        cur = 0;
-                    Thread.Sleep(1000);
-                }
+                name = "pp1";
+                students = new List<Student>();
             }
+
+            public void AddStudent(Student s)
+            {
+                students.Add(s);
+            }
+
+            public void save()
+            {
+                FileStream fs = new FileStream("lesson.xml", FileMode.OpenOrCreate,FileAccess.ReadWrite );
+                XmlSerializer xs = new XmlSerializer(typeof(Lesson));
+                xs.Serialize(fs, this);
+                fs.Close();
+
+            }
+            public Lesson GetData()
+            {
+                FileStream fs = new FileStream("lesson.xml", FileMode.Open, FileAccess.Read);
+                XmlSerializer xs = new XmlSerializer(typeof(Lesson));
+                Lesson lesson = (Lesson)xs.Deserialize(fs);
+                fs.Close();
+                return lesson;
+            }
+            public void Print()
+            {
+                Console.WriteLine(name + " ");
+            }
+        }
+        static void Main(string[] args)
+        {
+            Student s = new Student("Masha", 3.5);
+            Student s1 = new Student("Dan", 2.5);
+            Lesson l = new Lesson();
+            Lesson l1 = l.GetData();
+            l.AddStudent(s);
+            l.save();
+            l1.Print();
+            Console.ReadKey();
         }
     }
+}
